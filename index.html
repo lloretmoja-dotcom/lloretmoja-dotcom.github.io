@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#7C4DFF">
+<title>Mundo Divertido</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1139142823293337"
+     crossorigin="anonymous"></script>
+<script>
+  /* Marcado obligatorio para contenido dirigido a menores (COPPA / TFCD).
+     Desactiva anuncios personalizados y de remarketing en este sitio. */
+  window.adsbygoogle = window.adsbygoogle || [];
+  window.adsbygoogle.requestNonPersonalizedAds = 1;
+  window.adsbygoogle.push({
+    google_ad_client: "ca-pub-1139142823293337",
+    tag_for_child_directed_treatment: 1,
+    tag_for_under_age_of_consent: 1
+  });
+</script>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<!--
+  =====================================================================
+  MUNDO DIVERTIDO — Juego infantil hipercasual con 3 minijuegos
+  - Sin recopilación de datos personales ni identificadores de publicidad
+  - Sin textos largos, sin campos de entrada de texto libre
+  - Espacios publicitarios SIMULADOS (ver AD SLOT)
+  - Puerta parental matemática antes de Ajustes
+  - Sistema de stickers coleccionables (solo en memoria de sesión)
+  =====================================================================
+-->
+
+<style>
+  :root{
+    --purple:#7C4DFF; --purple-dark:#5E35B1;
+    --pink:#FF4D8D; --yellow:#FFD93D; --green:#4CD97B; --blue:#3DC7FF;
+    --white:#FFFFFF;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; user-select:none; }
+  html,body{ margin:0; padding:0; width:100%; height:100%; overflow:hidden;
+    font-family:"Trebuchet MS","Segoe UI Rounded",Verdana,sans-serif; touch-action:manipulation; }
+
+  #app{ position:fixed; inset:0; display:flex; flex-direction:column; overflow:hidden;
+    background: linear-gradient(180deg, var(--sky-top,#8ED2FF) 0%, var(--sky-bottom,#C9F2FF) 70%);
+    transition: background 0.6s ease; }
+
+  #app.theme-stars{ --sky-top:#8ED2FF; --sky-bottom:#C9F2FF; }
+  #app.theme-balloons{ --sky-top:#FFB6D9; --sky-bottom:#FFE3F1; }
+  #app.theme-colors{ --sky-top:#B6FFC9; --sky-bottom:#E9FFF0; }
+
+  #hud{ display:flex; align-items:center; justify-content:space-between;
+    padding:max(10px, env(safe-area-inset-top)) 14px 8px 14px; z-index:30; }
+  #score-badge{ background:var(--white); border-radius:50px; padding:8px 18px; font-size:22px;
+    font-weight:800; color:var(--purple-dark); box-shadow:0 4px 0 rgba(0,0,0,0.12);
+    display:flex; align-items:center; gap:6px; }
+  .round-btn{ width:52px; height:52px; border-radius:50%; border:none; background:var(--white);
+    box-shadow:0 4px 0 rgba(0,0,0,0.12); font-size:26px; display:flex; align-items:center;
+    justify-content:center; cursor:pointer; }
+  .round-btn:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,0.12); }
+  #hud-right{ display:flex; gap:8px; }
+
+  #game-area{ position:relative; flex:1; overflow:hidden; }
+
+  .cloud{ position:absolute; background:rgba(255,255,255,0.85); border-radius:50px;
+    filter:blur(0.5px); animation:drift linear infinite; }
+  @keyframes drift{ from{transform:translateX(0);} to{transform:translateX(-120vw);} }
+
+  .target{ position:absolute; width:72px; height:72px; display:flex; align-items:center;
+    justify-content:center; font-size:44px; border-radius:50%; cursor:pointer;
+    animation:pop-in 0.25s ease-out; filter:drop-shadow(0 6px 6px rgba(0,0,0,0.15));
+    touch-action:manipulation; }
+  @keyframes pop-in{ from{transform:scale(0);} to{transform:scale(1);} }
+  .target.float{ animation:pop-in 0.25s ease-out, float-bob 2.4s ease-in-out infinite; }
+  @keyframes float-bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+  .target.rise{ animation:pop-in 0.25s ease-out, rise-up linear forwards; }
+  @keyframes rise-up{ from{ transform:translateY(0); } to{ transform:translateY(-115vh); } }
+  .target.popping{ animation:pop-out 0.35s ease-out forwards !important; pointer-events:none; }
+  @keyframes pop-out{ 0%{transform:scale(1);opacity:1;} 100%{transform:scale(1.8);opacity:0;} }
+  .target.shake{ animation: shake-bad 0.4s ease-out forwards !important; pointer-events:none; }
+  @keyframes shake-bad{ 0%{transform:scale(1);} 30%{transform:scale(0.85) rotate(-10deg);}
+    60%{transform:scale(0.85) rotate(10deg);} 100%{transform:scale(0);opacity:0;} }
+
+  .sparkle{ position:absolute; pointer-events:none; font-size:26px; animation:sparkle-fly 0.6s ease-out forwards; }
+  @keyframes sparkle-fly{ 0%{transform:translateY(0) scale(1);opacity:1;} 100%{transform:translateY(-60px) scale(0.4);opacity:0;} }
+
+  .floater-text{ position:absolute; pointer-events:none; font-size:22px; font-weight:900;
+    color:var(--purple-dark); animation:float-text 0.7s ease-out forwards; }
+  @keyframes float-text{ 0%{transform:translateY(0);opacity:1;} 100%{transform:translateY(-40px);opacity:0;} }
+
+  /* Color match mode */
+  #color-target-wrap{ display:flex; flex-direction:column; align-items:center; justify-content:center;
+    height:36%; gap:6px; }
+  #color-target-ball{ width:110px; height:110px; border-radius:50%; box-shadow:0 8px 0 rgba(0,0,0,0.15); }
+  #color-target-label{ font-size:15px; font-weight:800; color:#555; }
+  #color-options{ display:flex; justify-content:center; gap:18px; flex-wrap:wrap; padding: 10px 20px; }
+  .color-opt{ width:80px; height:80px; border-radius:50%; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,0.15);
+    border: 5px solid #fff; }
+  .color-opt:active{ transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,0.15); }
+
+  .overlay{ position:absolute; inset:0; background:rgba(94,53,177,0.55); backdrop-filter:blur(2px);
+    display:flex; align-items:center; justify-content:center; z-index:50; padding:20px; overflow-y:auto; }
+  .hidden{ display:none !important; }
+  .card{ background:var(--white); border-radius:28px; padding:26px 22px; max-width:440px; width:100%;
+    text-align:center; box-shadow:0 10px 0 rgba(0,0,0,0.15); margin:auto; }
+  .card h1{ margin:0 0 6px 0; font-size:28px; color:var(--purple-dark); }
+  .card p.subtitle{ margin:0 0 16px 0; font-size:15px; color:#666; }
+  .big-emoji{ font-size:64px; line-height:1; margin-bottom:6px; }
+
+  .big-btn{ display:block; width:100%; border:none; border-radius:22px; padding:16px; font-size:22px;
+    font-weight:800; color:#fff; margin:10px 0 0 0; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,0.18); }
+  .big-btn:active{ transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,0.18); }
+  .btn-play{ background:linear-gradient(180deg, var(--green), #2FB864); }
+  .btn-secondary{ background:linear-gradient(180deg, var(--blue), #1E9FE0); }
+  .btn-collection{ background:linear-gradient(180deg, #FFC24D, #FFA21E); }
+  .btn-parent{ background:linear-gradient(180deg,#B0BEC5,#90A4AE); font-size:14px; padding:11px; margin-top:14px; }
+
+  /* Selector de minijuego */
+  .mode-row{ display:flex; justify-content:center; gap:12px; margin:14px 0 4px 0; flex-wrap:wrap; }
+  .mode-card{ width:96px; padding:10px 6px; border-radius:18px; background:#F1F1F8; cursor:pointer;
+    border:3px solid transparent; }
+  .mode-card.selected{ border-color:var(--purple); background:#EDE7FF; }
+  .mode-card .mode-emoji{ font-size:32px; }
+  .mode-card .mode-name{ font-size:12px; font-weight:800; color:#555; margin-top:2px; }
+
+  .char-row{ display:flex; justify-content:center; gap:12px; margin:10px 0 4px 0; }
+  .char-option{ width:52px; height:52px; border-radius:50%; border:4px solid transparent; font-size:28px;
+    display:flex; align-items:center; justify-content:center; background:#F1F1F8; cursor:pointer; }
+  .char-option.selected{ border-color:var(--purple); background:#EDE7FF; }
+
+  #parent-math{ font-size:38px; font-weight:900; color:var(--purple-dark); margin:12px 0; letter-spacing:2px; }
+  .num-pad{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:10px 0; }
+  .num-key{ padding:15px 0; font-size:20px; font-weight:700; border:none; border-radius:14px;
+    background:#F1F1F8; color:var(--purple-dark); cursor:pointer; }
+  .num-key:active{ background:#E0DAFC; }
+  #parent-answer-display{ background:#F1F1F8; border-radius:14px; padding:10px; font-size:24px;
+    min-height:44px; letter-spacing:4px; color:#333; margin-bottom:8px; }
+  #parent-error{ color:var(--pink); font-weight:700; font-size:13px; min-height:16px; }
+
+  .settings-row{ display:flex; align-items:center; justify-content:space-between; padding:11px 4px;
+    border-bottom:2px solid #F1F1F8; font-size:16px; color:#444; font-weight:700; text-align:left; }
+  .switch{ position:relative; width:50px; height:28px; background:#D8D8E4; border-radius:30px; cursor:pointer; flex-shrink:0; }
+  .switch.on{ background:var(--green); }
+  .switch::after{ content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%;
+    background:#fff; transition:left 0.15s ease; }
+  .switch.on::after{ left:25px; }
+
+  #ad-banner{ position:relative; width:100%; min-height:60px; background:repeating-linear-gradient(45deg,#ECECF5,#ECECF5 10px,#E3E3F2 10px,#E3E3F2 20px);
+    display:flex; align-items:center; justify-content:center; flex-direction:column; border-top:2px solid #DCDCEC;
+    padding:6px 10px calc(6px + env(safe-area-inset-bottom)); z-index:20; }
+  #ad-banner .ad-label{ font-size:10px; color:#9A9AAF; font-weight:700; letter-spacing:1px; position:absolute; top:4px; left:8px; }
+  #ad-banner .ad-placeholder-text{ font-size:12px; color:#8A8AA0; font-weight:600; }
+
+  .confetti{ position:absolute; width:10px; height:10px; top:-20px; border-radius:2px; animation:fall linear forwards; }
+  @keyframes fall{ to{ transform:translateY(110vh) rotate(360deg); opacity:0.9; } }
+
+  /* Colección de stickers */
+  .sticker-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:14px 0; max-height:260px; overflow-y:auto; }
+  .sticker-slot{ aspect-ratio:1; border-radius:16px; background:#F1F1F8; display:flex; align-items:center; justify-content:center;
+    font-size:30px; }
+  .sticker-slot.empty{ opacity:0.25; font-size:20px; }
+  .sticker-new-banner{ background:linear-gradient(180deg,#FFE18A,#FFC24D); border-radius:20px; padding:16px; margin-bottom:6px; }
+  .sticker-new-banner .sticker-big{ font-size:60px; }
+
+  @media (min-width:700px){ .card{ max-width:480px; padding:34px 30px; } .card h1{ font-size:32px; } }
+</style>
+</head>
+<body>
+
+<div id="app" class="theme-stars">
+
+  <div id="hud">
+    <div id="score-badge"><span>⭐</span><span id="score-value">0</span></div>
+    <div id="hud-right">
+      <button class="round-btn" id="btn-pause" aria-label="Pausa">⏸️</button>
+    </div>
+  </div>
+
+  <div id="game-area"></div>
+
+  <div id="ad-banner">
+    <span class="ad-label">ANUNCIO</span>
+    <span class="ad-placeholder-text">🌟 Espacio publicitario infantil seguro 🌟</span>
+  </div>
+
+  <!-- ===== Pantalla de inicio ===== -->
+  <div class="overlay" id="start-screen">
+    <div class="card">
+      <div class="big-emoji">🎮</div>
+      <h1>Mundo Divertido</h1>
+      <p class="subtitle">Elige un juego para empezar</p>
+
+      <div class="mode-row" id="mode-row">
+        <div class="mode-card selected" data-mode="stars">
+          <div class="mode-emoji">⭐</div><div class="mode-name">Estrellas</div>
+        </div>
+        <div class="mode-card" data-mode="balloons">
+          <div class="mode-emoji">🎈</div><div class="mode-name">Globos</div>
+        </div>
+        <div class="mode-card" data-mode="colors">
+          <div class="mode-emoji">🎨</div><div class="mode-name">Colores</div>
+        </div>
+      </div>
+
+      <div class="char-row" id="char-row">
+        <div class="char-option selected" data-char="🐻">🐻</div>
+        <div class="char-option" data-char="🐰">🐰</div>
+        <div class="char-option" data-char="🐸">🐸</div>
+        <div class="char-option" data-char="🐱">🐱</div>
+      </div>
+
+      <button class="big-btn btn-play" id="btn-play">▶️ Jugar</button>
+      <button class="big-btn btn-collection" id="btn-open-collection">🏆 Mi colección</button>
+      <button class="big-btn btn-parent" id="btn-open-settings">⚙️ Ajustes (para adultos)</button>
+    </div>
+  </div>
+
+  <!-- ===== Fin de ronda ===== -->
+  <div class="overlay hidden" id="end-screen">
+    <div class="card">
+      <div id="sticker-reveal" class="sticker-new-banner hidden">
+        <div class="sticker-big" id="sticker-big-emoji">⭐</div>
+        <div style="font-weight:800;color:#7A5200;">¡Nuevo sticker!</div>
+      </div>
+      <div class="big-emoji" id="end-emoji">🎉</div>
+      <h1>¡Muy bien!</h1>
+      <p class="subtitle"><span id="end-score">0</span> puntos conseguidos</p>
+      <button class="big-btn btn-play" id="btn-play-again">🔁 Otra vez</button>
+      <button class="big-btn btn-secondary" id="btn-change-game">🎲 Cambiar juego</button>
+      <button class="big-btn btn-parent" id="btn-go-home">🏠 Inicio</button>
+    </div>
+  </div>
+
+  <!-- ===== Pausa ===== -->
+  <div class="overlay hidden" id="pause-overlay">
+    <div class="card">
+      <div class="big-emoji">⏸️</div>
+      <h1>Pausa</h1>
+      <button class="big-btn btn-play" id="btn-resume">▶️ Continuar</button>
+      <button class="big-btn btn-secondary" id="btn-pause-home">🏠 Inicio</button>
+    </div>
+  </div>
+
+  <!-- ===== Colección de stickers ===== -->
+  <div class="overlay hidden" id="collection-screen">
+    <div class="card">
+      <div class="big-emoji">🏆</div>
+      <h1>Mi colección</h1>
+      <p class="subtitle" id="collection-count">0 de 12 stickers</p>
+      <div class="sticker-grid" id="sticker-grid"></div>
+      <button class="big-btn btn-secondary" id="btn-close-collection">Volver</button>
+    </div>
+  </div>
+
+  <!-- ===== Puerta parental ===== -->
+  <div class="overlay hidden" id="parent-gate">
+    <div class="card">
+      <div class="big-emoji">🔒</div>
+      <h1>Área para adultos</h1>
+      <p class="subtitle">Resuelve la operación para continuar</p>
+      <div id="parent-math"></div>
+      <div id="parent-answer-display"></div>
+      <div id="parent-error">&nbsp;</div>
+      <div class="num-pad" id="num-pad"></div>
+      <button class="big-btn btn-secondary" id="btn-parent-cancel" style="margin-top:12px;">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- ===== Ajustes ===== -->
+  <div class="overlay hidden" id="settings-screen">
+    <div class="card" style="text-align:left;">
+      <h1 style="text-align:center;">⚙️ Ajustes</h1>
+      <div class="settings-row"><span>🔊 Sonido</span><div class="switch on" id="toggle-sound"></div></div>
+      <div class="settings-row"><span>✨ Efectos visuales</span><div class="switch on" id="toggle-effects"></div></div>
+      <div class="settings-row"><span>📺 Anuncios</span><div class="switch on" id="toggle-ads"></div></div>
+      <div class="settings-row" style="border-bottom:none;"><span>⏱️ Duración de la ronda</span><span id="duration-label" style="color:var(--purple-dark);">30s</span></div>
+      <input type="range" min="15" max="60" step="15" value="30" id="duration-slider" style="width:100%;">
+      <button class="big-btn btn-secondary" id="btn-close-settings" style="margin-top:16px;">Volver al juego</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =====================================================================
+     PRIVACIDAD (COPPA / GDPR-K): sin cookies de terceros, sin identificar
+     al usuario entre sesiones, sin nombre/correo/ubicación. Los ajustes y
+     la colección de stickers viven solo en memoria de la sesión actual
+     (variables JS) — no se persisten ni se envían a ningún servidor.
+     El AD SLOT es un marcador visual sin llamadas de red.
+     ===================================================================== */
+
+  var STICKER_SET = ["⭐","🌟","🎈","🌈","🍀","🦄","🐝","🌸","🍭","🎁","🐬","☀️"];
+
+  var state = {
+    score: 0, playing:false, paused:false,
+    timeLeft:30, roundDuration:30,
+    soundOn:true, effectsOn:true, adsOn:true,
+    character:"🐻", mode:"stars",
+    spawnTimer:null, countdownTimer:null,
+    parentAnswer:"", parentCorrect:0,
+    collection: {},           // { "⭐": true, ... }
+    colorRoundTarget: null
+  };
+
+  var gameArea = document.getElementById("game-area");
+  var scoreValue = document.getElementById("score-value");
+  var appEl = document.getElementById("app");
+
+  /* ---------------- Sonido ---------------- */
+  var AudioCtx = window.AudioContext || window.webkitAudioContext;
+  var actx = null;
+  function playTone(freq,dur,type){
+    if(!state.soundOn) return;
+    try{
+      if(!actx) actx = new AudioCtx();
+      var osc=actx.createOscillator(), gain=actx.createGain();
+      osc.type=type||"sine"; osc.frequency.value=freq;
+      gain.gain.setValueAtTime(0.15, actx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+dur);
+      osc.connect(gain); gain.connect(actx.destination);
+      osc.start(); osc.stop(actx.currentTime+dur);
+    }catch(e){}
+  }
+  function sfxPop(){ playTone(880,0.15,"triangle"); }
+  function sfxBonus(){ playTone(1046,0.1); setTimeout(function(){playTone(1318,0.15);},90); }
+  function sfxBad(){ playTone(180,0.25,"sawtooth"); }
+  function sfxWin(){ playTone(660,0.12); setTimeout(function(){playTone(880,0.12);},120); setTimeout(function(){playTone(1100,0.2);},240); }
+  function sfxCorrectColor(){ playTone(784,0.15,"triangle"); }
+  function sfxWrongColor(){ playTone(300,0.2,"sawtooth"); }
+
+  function spawnClouds(){
+    for(var i=0;i<4;i++){
+      var c=document.createElement("div"); c.className="cloud";
+      var w=60+Math.random()*60;
+      c.style.width=w+"px"; c.style.height=(w*0.5)+"px";
+      c.style.top=(10+Math.random()*40)+"%"; c.style.left=(Math.random()*100)+"%";
+      c.style.animationDuration=(25+Math.random()*20)+"s";
+      gameArea.appendChild(c);
+    }
+  }
+  function randomBetween(a,b){ return a+Math.random()*(b-a); }
+  function clearGameArea(){ gameArea.innerHTML=""; }
+
+  function spawnSparkle(x,y){
+    var s=document.createElement("div"); s.className="sparkle"; s.textContent="✨";
+    s.style.left=x+"px"; s.style.top=y+"px"; gameArea.appendChild(s);
+    setTimeout(function(){ if(s.parentNode) s.remove(); },650);
+  }
+  function spawnFloaterText(x,y,text){
+    var f=document.createElement("div"); f.className="floater-text"; f.textContent=text;
+    f.style.left=x+"px"; f.style.top=y+"px"; gameArea.appendChild(f);
+    setTimeout(function(){ if(f.parentNode) f.remove(); },700);
+  }
+  function spawnConfettiBurst(){
+    if(!state.effectsOn) return;
+    var colors=["#FF4D8D","#FFD93D","#4CD97B","#3DC7FF","#7C4DFF"];
+    for(var i=0;i<24;i++){
+      var c=document.createElement("div"); c.className="confetti";
+      c.style.left=(Math.random()*100)+"%";
+      c.style.background=colors[Math.floor(Math.random()*colors.length)];
+      c.style.animationDuration=(1.2+Math.random()*1.2)+"s";
+      gameArea.appendChild(c);
+      (function(el){ setTimeout(function(){ if(el.parentNode) el.remove(); },2600); })(c);
+    }
+  }
+
+  /* =====================================================================
+     MODO 1: ATRAPA ESTRELLAS — tocar estrellas, evitar bombas, arcoíris=bonus
+     ===================================================================== */
+  var starTypes = [
+    { emoji:"⭐", weight:6, points:1, bg:"#FFD93D88" },
+    { emoji:"🌟", weight:2, points:1, bg:"#FFEC8B88" },
+    { emoji:"🌈", weight:1, points:5, bg:"#FF9FE388", bonus:true },
+    { emoji:"💣", weight:2, points:-2, bg:"#77778888", bad:true }
+  ];
+  function pickWeighted(list){
+    var total=list.reduce(function(s,i){return s+i.weight;},0);
+    var r=Math.random()*total;
+    for(var i=0;i<list.length;i++){ r-=list[i].weight; if(r<=0) return list[i]; }
+    return list[0];
+  }
+  function spawnStarsTarget(){
+    if(!state.playing||state.paused) return;
+    var areaW=gameArea.clientWidth, areaH=gameArea.clientHeight, size=72;
+    var kind=pickWeighted(starTypes);
+    var t=document.createElement("div");
+    t.className="target float"; t.textContent=kind.emoji;
+    t.style.background="radial-gradient(circle at 35% 30%, #ffffff55, "+kind.bg+")";
+    var x=randomBetween(10, Math.max(10, areaW-size-10));
+    var y=randomBetween(10, Math.max(10, areaH-size-10));
+    t.style.left=x+"px"; t.style.top=y+"px";
+    var lifeTimer=setTimeout(function(){ if(t.parentNode) t.remove(); }, 2200);
+
+    t.addEventListener("pointerdown", function(ev){
+      ev.preventDefault();
+      if(t.classList.contains("popping")||t.classList.contains("shake")) return;
+      clearTimeout(lifeTimer);
+      state.score += kind.points;
+      if(state.score<0) state.score=0;
+      scoreValue.textContent=state.score;
+      if(kind.bad){
+        t.classList.add("shake"); sfxBad();
+        spawnFloaterText(x+size/2,y,"-2");
+      } else {
+        t.classList.add("popping");
+        kind.bonus ? sfxBonus() : sfxPop();
+        if(state.effectsOn) spawnSparkle(x+size/2,y+size/2);
+        spawnFloaterText(x+size/2,y,"+"+kind.points);
+      }
+      setTimeout(function(){ if(t.parentNode) t.remove(); },350);
+    }, {passive:false});
+    gameArea.appendChild(t);
+  }
+
+  /* =====================================================================
+     MODO 2: GLOBOS SALTARINES — suben desde abajo, tocar para reventar,
+     evitar los negros
+     ===================================================================== */
+  var balloonTypes = [
+    { emoji:"🎈", weight:5, points:1 },
+    { emoji:"🎉", weight:2, points:3, bonus:true },
+    { emoji:"🖤", weight:2, points:-2, bad:true }
+  ];
+  function spawnBalloonTarget(){
+    if(!state.playing||state.paused) return;
+    var areaW=gameArea.clientWidth, areaH=gameArea.clientHeight, size=68;
+    var kind=pickWeighted(balloonTypes);
+    var t=document.createElement("div");
+    t.className="target rise"; t.textContent=kind.emoji;
+    var dur = randomBetween(4.5, 7);
+    t.style.animationDuration = dur+"s";
+    var x=randomBetween(10, Math.max(10, areaW-size-10));
+    t.style.left=x+"px"; t.style.top=(areaH-size-4)+"px";
+    var lifeTimer=setTimeout(function(){ if(t.parentNode) t.remove(); }, dur*1000);
+
+    t.addEventListener("pointerdown", function(ev){
+      ev.preventDefault();
+      if(t.classList.contains("popping")||t.classList.contains("shake")) return;
+      clearTimeout(lifeTimer);
+      var rect = t.getBoundingClientRect();
+      var gaRect = gameArea.getBoundingClientRect();
+      var px = rect.left - gaRect.left + rect.width/2;
+      var py = rect.top - gaRect.top + rect.height/2;
+      state.score += kind.points;
+      if(state.score<0) state.score=0;
+      scoreValue.textContent=state.score;
+      if(kind.bad){
+        t.classList.add("shake"); sfxBad();
+        spawnFloaterText(px,py,"-2");
+      } else {
+        t.classList.add("popping");
+        kind.bonus ? sfxBonus() : sfxPop();
+        if(state.effectsOn) spawnSparkle(px,py);
+        spawnFloaterText(px,py,"+"+kind.points);
+      }
+      setTimeout(function(){ if(t.parentNode) t.remove(); },350);
+    }, {passive:false});
+    gameArea.appendChild(t);
+  }
+
+  /* =====================================================================
+     MODO 3: EMPAREJA COLORES — aparece una bola de color arriba,
+     toca la misma entre 4 opciones abajo
+     ===================================================================== */
+  var palette = [
+    {name:"Rojo", hex:"#FF5A5A"},
+    {name:"Azul", hex:"#3DC7FF"},
+    {name:"Amarillo", hex:"#FFD93D"},
+    {name:"Verde", hex:"#4CD97B"},
+    {name:"Rosa", hex:"#FF7FC4"},
+    {name:"Morado", hex:"#9B6BFF"}
+  ];
+  var colorWrap, colorBall, colorLabel, colorOptionsEl;
+
+  function buildColorModeDom(){
+    clearGameArea();
+    colorWrap = document.createElement("div");
+    colorWrap.id = "color-target-wrap";
+    colorBall = document.createElement("div");
+    colorBall.id = "color-target-ball";
+    colorLabel = document.createElement("div");
+    colorLabel.id = "color-target-label";
+    colorLabel.textContent = "¡Toca el mismo color!";
+    colorWrap.appendChild(colorBall);
+    colorWrap.appendChild(colorLabel);
+    gameArea.appendChild(colorWrap);
+
+    colorOptionsEl = document.createElement("div");
+    colorOptionsEl.id = "color-options";
+    gameArea.appendChild(colorOptionsEl);
+  }
+
+  function newColorRound(){
+    if(!state.playing||state.paused) return;
+    var shuffled = palette.slice().sort(function(){ return Math.random()-0.5; });
+    var target = shuffled[0];
+    var options = shuffled.slice(0,4).sort(function(){ return Math.random()-0.5; });
+    if(options.indexOf(target)===-1) options[0]=target;
+    state.colorRoundTarget = target;
+
+    colorBall.style.background = target.hex;
+    colorOptionsEl.innerHTML = "";
+    options.forEach(function(opt){
+      var b = document.createElement("div");
+      b.className = "color-opt";
+      b.style.background = opt.hex;
+      b.addEventListener("pointerdown", function(ev){
+        ev.preventDefault();
+        if(!state.playing||state.paused) return;
+        if(opt.hex === state.colorRoundTarget.hex){
+          state.score += 2;
+          sfxCorrectColor();
+          spawnConfettiMini(b);
+          spawnFloaterText(b.offsetLeft+40, b.offsetTop, "+2");
+        } else {
+          state.score = Math.max(0, state.score-1);
+          sfxWrongColor();
+          spawnFloaterText(b.offsetLeft+40, b.offsetTop, "-1");
+        }
+        scoreValue.textContent = state.score;
+        setTimeout(newColorRound, 250);
+      }, {passive:false});
+      colorOptionsEl.appendChild(b);
+    });
+  }
+  function spawnConfettiMini(anchorEl){
+    if(!state.effectsOn) return;
+    var rect = anchorEl.getBoundingClientRect();
+    var gaRect = gameArea.getBoundingClientRect();
+    spawnSparkle(rect.left-gaRect.left+30, rect.top-gaRect.top);
+  }
+
+  /* ---------------- Motor de ronda por modo ---------------- */
+  var modeConfig = {
+    stars:   { theme:"theme-stars",    spawnFn:spawnStarsTarget,   interval:820, setup:function(){ spawnClouds(); } },
+    balloons:{ theme:"theme-balloons", spawnFn:spawnBalloonTarget, interval:900, setup:function(){ spawnClouds(); } },
+    colors:  { theme:"theme-colors",   spawnFn:null,               interval:null, setup:function(){ buildColorModeDom(); newColorRound(); } }
+  };
+
+  function startRound(){
+    state.score=0; state.timeLeft=state.roundDuration;
+    state.playing=true; state.paused=false;
+    scoreValue.textContent="0";
+    clearGameArea();
+    appEl.className = modeConfig[state.mode].theme;
+    modeConfig[state.mode].setup();
+    showScreen(null);
+
+    var cfg = modeConfig[state.mode];
+    if(cfg.spawnFn){
+      state.spawnTimer = setInterval(function(){ cfg.spawnFn(); }, cfg.interval);
+    }
+    state.countdownTimer = setInterval(function(){
+      if(state.paused) return;
+      state.timeLeft--;
+      if(state.timeLeft<=0) endRound();
+    }, 1000);
+  }
+
+  function endRound(){
+    state.playing=false;
+    clearInterval(state.spawnTimer);
+    clearInterval(state.countdownTimer);
+    document.getElementById("end-score").textContent=state.score;
+    sfxWin();
+    spawnConfettiBurst();
+
+    // Recompensa: sticker aleatorio no repetido si es posible
+    var reveal = document.getElementById("sticker-reveal");
+    var missing = STICKER_SET.filter(function(s){ return !state.collection[s]; });
+    var pool = missing.length ? missing : STICKER_SET;
+    var won = pool[Math.floor(Math.random()*pool.length)];
+    var isNew = !state.collection[won];
+    state.collection[won] = true;
+    if(isNew){
+      document.getElementById("sticker-big-emoji").textContent = won;
+      reveal.classList.remove("hidden");
+    } else {
+      reveal.classList.add("hidden");
+    }
+
+    showScreen("end-screen");
+  }
+
+  function showScreen(id){
+    ["start-screen","end-screen","pause-overlay","parent-gate","settings-screen","collection-screen"].forEach(function(s){
+      document.getElementById(s).classList.toggle("hidden", s!==id);
+    });
+  }
+
+  /* ---------------- Selección de modo y personaje ---------------- */
+  document.getElementById("mode-row").addEventListener("click", function(ev){
+    var card = ev.target.closest(".mode-card");
+    if(!card) return;
+    document.querySelectorAll(".mode-card").forEach(function(c){ c.classList.remove("selected"); });
+    card.classList.add("selected");
+    state.mode = card.getAttribute("data-mode");
+  });
+  document.getElementById("char-row").addEventListener("click", function(ev){
+    var opt = ev.target.closest(".char-option");
+    if(!opt) return;
+    document.querySelectorAll(".char-option").forEach(function(o){ o.classList.remove("selected"); });
+    opt.classList.add("selected");
+    state.character = opt.getAttribute("data-char");
+  });
+
+  /* ---------------- Botones ---------------- */
+  document.getElementById("btn-play").addEventListener("click", startRound);
+  document.getElementById("btn-play-again").addEventListener("click", startRound);
+  document.getElementById("btn-change-game").addEventListener("click", function(){ showScreen("start-screen"); });
+  document.getElementById("btn-go-home").addEventListener("click", function(){ showScreen("start-screen"); });
+  document.getElementById("btn-pause-home").addEventListener("click", function(){
+    state.playing=false; clearInterval(state.spawnTimer); clearInterval(state.countdownTimer);
+    showScreen("start-screen");
+  });
+  document.getElementById("btn-pause").addEventListener("click", function(){
+    if(!state.playing) return;
+    state.paused=true; showScreen("pause-overlay");
+  });
+  document.getElementById("btn-resume").addEventListener("click", function(){
+    state.paused=false; showScreen(null);
+  });
+
+  /* ---------------- Colección ---------------- */
+  function renderCollection(){
+    var grid = document.getElementById("sticker-grid");
+    grid.innerHTML = "";
+    var owned = 0;
+    STICKER_SET.forEach(function(s){
+      var slot = document.createElement("div");
+      if(state.collection[s]){
+        slot.className = "sticker-slot";
+        slot.textContent = s;
+        owned++;
+      } else {
+        slot.className = "sticker-slot empty";
+        slot.textContent = "?";
+      }
+      grid.appendChild(slot);
+    });
+    document.getElementById("collection-count").textContent = owned + " de " + STICKER_SET.length + " stickers";
+  }
+  document.getElementById("btn-open-collection").addEventListener("click", function(){
+    renderCollection();
+    showScreen("collection-screen");
+  });
+  document.getElementById("btn-close-collection").addEventListener("click", function(){
+    showScreen("start-screen");
+  });
+
+  /* ---------------- Puerta parental ---------------- */
+  function newParentChallenge(){
+    var a=Math.floor(Math.random()*8)+2, b=Math.floor(Math.random()*8)+2;
+    state.parentCorrect = a+b; state.parentAnswer="";
+    document.getElementById("parent-math").textContent = a+" + "+b+" = ?";
+    document.getElementById("parent-answer-display").textContent="";
+    document.getElementById("parent-error").textContent="\u00A0";
+  }
+  function buildNumPad(){
+    var pad=document.getElementById("num-pad"); pad.innerHTML="";
+    ["1","2","3","4","5","6","7","8","9","⌫","0","OK"].forEach(function(k){
+      var b=document.createElement("button"); b.className="num-key"; b.textContent=k;
+      b.addEventListener("click", function(){ handleNumKey(k); });
+      pad.appendChild(b);
+    });
+  }
+  function handleNumKey(k){
+    if(k==="⌫") state.parentAnswer=state.parentAnswer.slice(0,-1);
+    else if(k==="OK"){ checkParentAnswer(); return; }
+    else if(state.parentAnswer.length<3) state.parentAnswer+=k;
+    document.getElementById("parent-answer-display").textContent=state.parentAnswer;
+  }
+  function checkParentAnswer(){
+    if(parseInt(state.parentAnswer,10)===state.parentCorrect){
+      showScreen("settings-screen");
+    } else {
+      document.getElementById("parent-error").textContent="Inténtalo de nuevo";
+      state.parentAnswer=""; document.getElementById("parent-answer-display").textContent="";
+    }
+  }
+  buildNumPad();
+  document.getElementById("btn-open-settings").addEventListener("click", function(){
+    newParentChallenge(); showScreen("parent-gate");
+  });
+  document.getElementById("btn-parent-cancel").addEventListener("click", function(){ showScreen("start-screen"); });
+  document.getElementById("btn-close-settings").addEventListener("click", function(){ showScreen("start-screen"); });
+
+  /* ---------------- Ajustes ---------------- */
+  function wireSwitch(id,key){
+    var el=document.getElementById(id);
+    el.addEventListener("click", function(){
+      state[key]=!state[key]; el.classList.toggle("on", state[key]);
+      if(key==="adsOn") document.getElementById("ad-banner").style.display = state.adsOn ? "flex":"none";
+    });
+  }
+  wireSwitch("toggle-sound","soundOn");
+  wireSwitch("toggle-effects","effectsOn");
+  wireSwitch("toggle-ads","adsOn");
+  document.getElementById("duration-slider").addEventListener("input", function(ev){
+    state.roundDuration = parseInt(ev.target.value,10);
+    document.getElementById("duration-label").textContent = state.roundDuration+"s";
+  });
+
+  showScreen("start-screen");
+})();
+</script>
+</body>
+</html>

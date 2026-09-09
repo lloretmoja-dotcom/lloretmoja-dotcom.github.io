@@ -1,0 +1,14 @@
+{
+  "name": "Mundo Divertido",
+  "short_name": "Mundo Divertido",
+  "description": "Juego infantil hipercasual con 3 minijuegos",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#8ED2FF",
+  "theme_color": "#7C4DFF",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
